@@ -1,0 +1,48 @@
+service: randome-rtest-service
+useDotenv: true
+
+# frameworkVersion: ">=1.2.0 <2.0.0"
+# frameworkVersion: '^3'
+package:
+  individually: true
+  excludeDevDependencies: true
+
+plugins:
+  - serverless-dotenv-plugin
+  - serverless-bundle
+  - serverless-offline
+
+custom:
+  secrets: ${file(.env.${sls:stage, self:provider.stage, 'dev'})}
+  serverless-offline:
+    httpPort: 4000
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: ${opt:stage, 'dev'}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:*
+          Resource:
+            - arn:aws:dynamodb:ap-south-1:860768680752:table/TodoTable
+
+
+functions:
+  resetPassword:
+    handler: src/handler.resetPassword
+    events:
+      - http:
+          path: /resetPassword
+          method: GET
+          cors: true
+  healthCheck:
+    handler: src/handler.get
+    events:
+      - http:
+          path: /check
+          method: GET
+          cors: true
